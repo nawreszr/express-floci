@@ -12,11 +12,6 @@ jobs:
         image: floci/floci
         ports:
           - 4566:4566
-        options: >-
-          --health-cmd "curl -sf http://localhost:4566/ || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
     env:
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -28,10 +23,17 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      - name: Attendre Floci
+        run: |
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null http://localhost:4566/ && echo "Floci prêt" && exit 0
+            sleep 2
+          done
+          echo "Floci ne répond pas" && exit 1
       - name: Créer les ressources Floci
         run: |
-          aws s3 mb s3://mon-bucket-local
-          aws sqs create-queue --queue-name ma-file-local
+          aws --endpoint-url http://localhost:4566 s3 mb s3://mon-bucket-local
+          aws --endpoint-url http://localhost:4566 sqs create-queue --queue-name ma-file-local
       - name: Démarrer l'API
         run: |
           node server.js &
