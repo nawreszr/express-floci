@@ -1,0 +1,40 @@
+name: Integration tests (Floci)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      floci:
+        image: floci/floci
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://localhost:4566
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Créer les ressources Floci
+        run: |
+          aws s3 mb s3://mon-bucket-local
+          aws sqs create-queue --queue-name ma-file-local
+      - name: Démarrer l'API
+        run: |
+          node server.js &
+          for i in $(seq 1 20); do curl -sf http://localhost:3001/health && break || sleep 1; done
+      - name: Tests d'intégration
+        run: npm test

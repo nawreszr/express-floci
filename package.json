@@ -1,0 +1,19 @@
+{
+  "name": "express-floci",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1176.0",
+    "@aws-sdk/client-sqs": "^3.1176.0",
+    "express": "^5.3.0",
+    "multer": "^2.5.0"
+  }
+}

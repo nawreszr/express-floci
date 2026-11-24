@@ -1,0 +1,25 @@
+services:
+  floci:
+    image: floci/floci
+    container_name: floci
+    ports:
+      - "4566:4566"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: express-api
+    ports:
+      - "3001:3001"
+    environment:
+      AWS_ENDPOINT_URL: http://floci:4566
+      SQS_QUEUE_URL: http://floci:4566/000000000000/ma-file-local
+      S3_BUCKET: mon-bucket-local
+    depends_on:
+      - floci
